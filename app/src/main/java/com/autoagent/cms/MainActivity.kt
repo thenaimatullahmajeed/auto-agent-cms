@@ -104,10 +104,9 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun stopAgent() {
-        startService(
-            Intent(this, AgentService::class.java).apply {
-                action = AgentService.ACTION_STOP
-            }
-        )
+        val intent = Intent(this, AgentService::class.java).apply {
+            action = AgentService.ACTION_STOP
+        }
+        startService(intent)
     }
 }
