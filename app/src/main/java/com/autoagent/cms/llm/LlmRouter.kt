@@ -27,7 +27,16 @@ class LlmRouter(
             while (transientRetries <= maxTransientRetries) {
                 val lease = pool.acquire(
                     estimatedRequestTokens = estimateTokens(request)
-                ) ?: break
+                )
+                if (lease == null) {
+                    // Diagnose WHY no key was eligible (quota gate used to silently
+                    // reject valid keys when the estimated tokens exceeded TPM).
+                    lastFailure = LlmFailure.NoAvailableKey(
+                        "No eligible $provider key: active=${pool.hasActiveKeys()}, " +
+                            "availableNow=${pool.availableCount()}."
+                    )
+                    break
+                }
                 try {
                     val response = client.generate(
                         apiKey = lease.secret,

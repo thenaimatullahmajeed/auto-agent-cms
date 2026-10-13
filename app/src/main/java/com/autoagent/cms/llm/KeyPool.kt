@@ -49,10 +49,14 @@ class KeyPool(
                 entry.estimatedTokens = 0
             }
         }
+        // RPM is a hard gate (providers enforce it strictly).
+        // TPM is NOT gated on the *estimate*: estimates are rough (chars/3) and a
+        // large accessibility tree can exceed the per-minute token quota on paper
+        // while the real call would succeed or 429 (which we handle with cooldown).
+        // Gating on the estimate caused valid keys to never be tried at all.
         val candidate = entries.values.asSequence()
             .filter { it.active && it.cooldownUntil <= now }
             .filter { it.requests < quota.requestsPerMinute }
-            .filter { it.estimatedTokens + estimatedRequestTokens <= quota.tokensPerMinute }
             .minWithOrNull(
                 compareBy<ApiKeyEntry> { it.requests }
                     .thenBy { it.estimatedTokens }

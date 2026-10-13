@@ -121,7 +121,7 @@ class AgentLoop(
     }
 
     private suspend fun decide(task: TaskEntity, screen: ObservedScreen, step: Int): UiAction {
-        val elements = screen.elements.take(250).joinToString("\n") {
+        val elements = screen.elements.take(150).joinToString("\n") {
             "index=${it.index}, text=${it.text.orEmpty().take(100)}, " +
                 "desc=${it.description.orEmpty().take(100)}, " +
                 "id=${it.viewId.orEmpty()}, class=${it.className.orEmpty()}, " +
