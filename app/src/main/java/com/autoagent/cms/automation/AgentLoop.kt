@@ -4,6 +4,7 @@ import com.autoagent.cms.data.AgentRepository
 import com.autoagent.cms.data.TaskEntity
 import com.autoagent.cms.data.TaskStatus
 import com.autoagent.cms.llm.LlmFailure
+import com.autoagent.cms.llm.userMessage
 import com.autoagent.cms.llm.LlmMessage
 import com.autoagent.cms.llm.LlmRequest
 import com.autoagent.cms.llm.LlmRouter

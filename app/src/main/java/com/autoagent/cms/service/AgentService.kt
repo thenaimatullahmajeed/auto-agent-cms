@@ -20,6 +20,7 @@ import com.autoagent.cms.llm.GeminiClient
 import com.autoagent.cms.llm.GroqClient
 import com.autoagent.cms.llm.KeyManager
 import com.autoagent.cms.llm.LlmFailure
+import com.autoagent.cms.llm.userMessage
 import com.autoagent.cms.llm.LlmRouter
 import com.autoagent.cms.security.SensitiveScreenGuard
 import java.util.concurrent.ConcurrentHashMap
