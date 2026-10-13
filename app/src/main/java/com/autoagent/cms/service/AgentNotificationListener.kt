@@ -4,7 +4,9 @@ import android.app.Notification
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
 
 data class IncomingNotification(
     val packageName: String,
@@ -17,11 +19,11 @@ data class IncomingNotification(
 class AgentNotificationListener : NotificationListenerService() {
     override fun onListenerConnected() {
         super.onListenerConnected()
-        connected = true
+        _connected.value = true
     }
 
     override fun onListenerDisconnected() {
-        connected = false
+        _connected.value = false
         super.onListenerDisconnected()
     }
 
@@ -46,9 +48,8 @@ class AgentNotificationListener : NotificationListenerService() {
     companion object {
         const val WHATSAPP = "com.whatsapp"
         const val WHATSAPP_BUSINESS = "com.whatsapp.w4b"
-        @Volatile
-        var connected: Boolean = false
-            private set
+        private val _connected = MutableStateFlow(false)
+        val connected: StateFlow<Boolean> = _connected
         private val _notifications = MutableSharedFlow<IncomingNotification>(extraBufferCapacity = 64)
         val notifications: SharedFlow<IncomingNotification> = _notifications
     }

@@ -18,6 +18,9 @@ interface TaskDao {
     @Query("SELECT * FROM agent_tasks WHERE id = :id LIMIT 1")
     suspend fun getById(id: String): TaskEntity?
 
+    @Query("SELECT * FROM agent_tasks WHERE id = :id LIMIT 1")
+    fun observeById(id: String): Flow<TaskEntity?>
+
     @Query("SELECT * FROM agent_tasks ORDER BY createdAt DESC")
     fun observeAll(): Flow<List<TaskEntity>>
 
@@ -74,6 +77,9 @@ interface ProviderKeyDao {
 
     @Query("SELECT * FROM provider_keys ORDER BY provider, nickname")
     fun observeAll(): Flow<List<ProviderKeyEntity>>
+
+    @Query("SELECT * FROM provider_keys WHERE status = 'ACTIVE' ORDER BY provider, nickname")
+    suspend fun getActive(): List<ProviderKeyEntity>
 
     @Query("DELETE FROM provider_keys WHERE id = :id")
     suspend fun deleteById(id: String)

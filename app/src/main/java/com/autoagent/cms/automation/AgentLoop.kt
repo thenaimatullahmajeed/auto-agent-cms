@@ -8,6 +8,8 @@ import com.autoagent.cms.llm.LlmRequest
 import com.autoagent.cms.llm.LlmRouter
 import com.autoagent.cms.llm.RequestPurpose
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.decodeFromString
 
@@ -105,7 +107,9 @@ class AgentLoop(
             repository.setStatus(taskId, TaskStatus.PAUSED, "Step limit reached; manual review required.")
             reporter.report(task, "Paused: reached the $maxSteps-step limit.")
         } catch (e: CancellationException) {
-            repository.setStatus(taskId, TaskStatus.PAUSED, "Task cancelled or service stopped.")
+            withContext(NonCancellable) {
+                repository.setStatus(taskId, TaskStatus.CANCELLED, "Task cancelled.")
+            }
             throw e
         } catch (e: Exception) {
             repository.recordError(taskId, "Task failed: ${e.javaClass.simpleName}")

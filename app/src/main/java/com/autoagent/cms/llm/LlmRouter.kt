@@ -69,7 +69,6 @@ class LlmRouter(
     }
 
     private fun providerOrder(purpose: RequestPurpose): List<LlmProvider> = when (purpose) {
-        RequestPurpose.SCREEN_DECISION -> listOf(LlmProvider.GROQ, LlmProvider.GEMINI)
         RequestPurpose.SPEECH_TO_TEXT -> listOf(LlmProvider.GROQ)
         else -> listOf(LlmProvider.GEMINI, LlmProvider.GROQ)
     }

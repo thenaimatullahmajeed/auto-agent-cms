@@ -8,8 +8,19 @@ class AgentRepository(private val database: AgentDatabase) {
     private val tasks = database.taskDao()
     private val events = database.taskEventDao()
     private val messages = database.processedMessageDao()
+    private val providerKeys = database.providerKeyDao()
 
     fun observeTasks(): Flow<List<TaskEntity>> = tasks.observeAll()
+
+    fun observeTask(id: String): Flow<TaskEntity?> = tasks.observeById(id)
+
+    fun observeProviderKeys(): Flow<List<ProviderKeyEntity>> = providerKeys.observeAll()
+
+    suspend fun upsertProviderKey(key: ProviderKeyEntity) = providerKeys.upsert(key)
+
+    suspend fun deleteProviderKey(id: String) = providerKeys.deleteById(id)
+
+    suspend fun getActiveProviderKeys(): List<ProviderKeyEntity> = providerKeys.getActive()
 
     fun observeRecentEvents(limit: Int = 200): Flow<List<TaskEventEntity>> =
         events.observeRecent(limit.coerceIn(1, 1000))
