@@ -10,12 +10,15 @@ class LlmRouter(
     private val geminiModel: String,
     private val groqTextModel: String,
     private val groqVisionModel: String = "qwen/qwen3.8-27b",
-    private val maxTransientRetries: Int = 2
+    private val maxTransientRetries: Int = 2,
+    private val onKeyUnauthorized: (suspend (keyId: String) -> Unit)? = null
 ) {
     suspend fun generate(request: LlmRequest): LlmResponse {
         val providers = providerOrder(request.purpose)
+        val triedProviders = LinkedHashSet<LlmProvider>()
         var lastFailure: Throwable? = null
         for (provider in providers) {
+            triedProviders.add(provider)
             val client = clientFor(provider)
             val pool = poolFor(provider)
             var transientRetries = 0
@@ -43,6 +46,10 @@ class LlmRouter(
                     lastFailure = e
                 } catch (e: LlmFailure.Unauthorized) {
                     pool.markDead(lease.keyId)
+                    try {
+                        onKeyUnauthorized?.invoke(lease.keyId)
+                    } catch (_: Exception) {
+                    }
                     lastFailure = e
                 } catch (e: LlmFailure.Server) {
                     lastFailure = e
@@ -63,8 +70,8 @@ class LlmRouter(
             }
         }
         throw LlmFailure.NoAvailableKey(
-            "No provider/key could complete the request safely: " +
-                (lastFailure?.message ?: "no eligible key")
+            "Tried providers: ${triedProviders.joinToString(", ")}. " +
+                "Last error: ${lastFailure?.message ?: "no eligible key"}"
         )
     }
 

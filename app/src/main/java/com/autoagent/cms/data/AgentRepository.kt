@@ -20,6 +20,9 @@ class AgentRepository(private val database: AgentDatabase) {
 
     suspend fun deleteProviderKey(id: String) = providerKeys.deleteById(id)
 
+    suspend fun updateProviderKeyStatus(id: String, status: String) =
+        providerKeys.updateStatus(id, status, 0L, System.currentTimeMillis())
+
     suspend fun getActiveProviderKeys(): List<ProviderKeyEntity> = providerKeys.getActive()
 
     fun observeRecentEvents(limit: Int = 200): Flow<List<TaskEventEntity>> =

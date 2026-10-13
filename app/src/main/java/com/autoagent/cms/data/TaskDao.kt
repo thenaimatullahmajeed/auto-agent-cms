@@ -78,7 +78,7 @@ interface ProviderKeyDao {
     @Query("SELECT * FROM provider_keys ORDER BY provider, nickname")
     fun observeAll(): Flow<List<ProviderKeyEntity>>
 
-    @Query("SELECT * FROM provider_keys WHERE status = 'ACTIVE' ORDER BY provider, nickname")
+    @Query("SELECT * FROM provider_keys WHERE status IN ('ACTIVE','VALID','UNCHECKED') ORDER BY provider, nickname")
     suspend fun getActive(): List<ProviderKeyEntity>
 
     @Query("DELETE FROM provider_keys WHERE id = :id")

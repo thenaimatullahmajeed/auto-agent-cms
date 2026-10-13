@@ -19,6 +19,7 @@ import com.autoagent.cms.data.TaskStatus
 import com.autoagent.cms.llm.GeminiClient
 import com.autoagent.cms.llm.GroqClient
 import com.autoagent.cms.llm.KeyManager
+import com.autoagent.cms.llm.LlmFailure
 import com.autoagent.cms.llm.LlmRouter
 import com.autoagent.cms.security.SensitiveScreenGuard
 import java.util.concurrent.ConcurrentHashMap
@@ -86,7 +87,9 @@ class AgentService : Service() {
                 throw e
             } catch (e: Exception) {
                 try {
-                    repository.recordError(taskId, "Start nahi ho saka: ${e.javaClass.simpleName}")
+                    val message = (e as? LlmFailure)?.userMessage()
+                        ?: "Start nahi ho saka: ${e.javaClass.simpleName}"
+                    repository.recordError(taskId, message)
                     repository.setStatus(taskId, TaskStatus.PAUSED, "Start nahi ho saka.")
                 } catch (_: Exception) {
                 }
@@ -118,7 +121,8 @@ class AgentService : Service() {
             geminiKeys = geminiPool,
             groqKeys = groqPool,
             geminiModel = "gemini-2.0-flash",
-            groqTextModel = "llama-3.3-70b-versatile"
+            groqTextModel = "llama-3.3-70b-versatile",
+            onKeyUnauthorized = { keyId -> keyManager.markKeyInvalid(keyId) }
         )
         val observer = ScreenObserver(service, SensitiveScreenGuard())
         val actionExecutor = AccessibilityUiActionExecutor(applicationContext, observer)

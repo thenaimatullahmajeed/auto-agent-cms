@@ -63,3 +63,15 @@ interface LlmClient {
     val provider: LlmProvider
     suspend fun generate(apiKey: String, request: LlmRequest): LlmResponse
 }
+
+/** Human-readable (Roman Urdu) message for every failure type. */
+fun LlmFailure.userMessage(): String = when (this) {
+    is LlmFailure.NoAvailableKey ->
+        "Koi API key kaam nahi kar rahi. Keys check karo (ghalat/expired ho sakti hain)."
+    is LlmFailure.Unauthorized -> "API key ghalat hai — nayi key add karo."
+    is LlmFailure.RateLimited -> "Limit khatam ho gayi — thodi der baad dobara chalao."
+    is LlmFailure.Network -> "Internet ka masla hai — connection check karo."
+    is LlmFailure.Server -> "Server error — thodi der baad dobara try karo."
+    is LlmFailure.InvalidResponse -> "Server se ghalat jawab aaya — dobara try karo."
+    is LlmFailure.Unsupported -> "Ye request supported nahi hai."
+}

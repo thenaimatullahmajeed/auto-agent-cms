@@ -3,6 +3,7 @@ package com.autoagent.cms.automation
 import com.autoagent.cms.data.AgentRepository
 import com.autoagent.cms.data.TaskEntity
 import com.autoagent.cms.data.TaskStatus
+import com.autoagent.cms.llm.LlmFailure
 import com.autoagent.cms.llm.LlmMessage
 import com.autoagent.cms.llm.LlmRequest
 import com.autoagent.cms.llm.LlmRouter
@@ -112,7 +113,8 @@ class AgentLoop(
             }
             throw e
         } catch (e: Exception) {
-            repository.recordError(taskId, "Task failed: ${e.javaClass.simpleName}")
+            val message = (e as? LlmFailure)?.userMessage() ?: "Task failed: ${e.javaClass.simpleName}"
+            repository.recordError(taskId, message)
             repository.setStatus(taskId, TaskStatus.PAUSED, "Unexpected failure; no automatic action replay.")
         }
     }

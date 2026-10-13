@@ -41,6 +41,7 @@ import com.autoagent.cms.data.AgentDatabase
 import com.autoagent.cms.data.AgentRepository
 import com.autoagent.cms.data.TaskEntity
 import com.autoagent.cms.data.TaskStatus
+import com.autoagent.cms.llm.KeyCheck
 import com.autoagent.cms.llm.KeyManager
 import com.autoagent.cms.llm.LlmProvider
 import com.autoagent.cms.service.AgentAccessibilityService
@@ -84,6 +85,8 @@ class MainActivity : ComponentActivity() {
         var nickname by rememberSaveable { mutableStateOf("") }
         var keyText by rememberSaveable { mutableStateOf("") }
         var keyMessage by remember { mutableStateOf<String?>(null) }
+        var keyMessageOk by remember { mutableStateOf<Boolean?>(null) }
+        var keyChecking by remember { mutableStateOf(false) }
 
         val activeTask = tasks.firstOrNull {
             it.status == TaskStatus.RUNNING || it.status == TaskStatus.WAITING_FOR_CONFIRMATION
@@ -142,6 +145,8 @@ class MainActivity : ComponentActivity() {
                                     when {
                                         input.isEmpty() -> taskMessage = "Pehle task likho"
                                         keys.isEmpty() -> taskMessage = "API key add karo"
+                                        keys.none { it.status == "VALID" || it.status == "ACTIVE" } ->
+                                            taskMessage = "Koi valid key nahi — nayi key add karo"
                                         !a11yConnected -> taskMessage = "Pehle Accessibility on karo"
                                         activeTask != null -> taskMessage = "Ek task pehle se chal raha hai"
                                         else -> {
@@ -200,29 +205,63 @@ class MainActivity : ComponentActivity() {
                             singleLine = true,
                             visualTransformation = PasswordVisualTransformation()
                         )
-                        keyMessage?.let { Text(it, color = Color.Red) }
-                        Button(onClick = {
-                            scope.launch {
-                                val secret = keyText.trim()
-                                if (secret.isEmpty()) {
-                                    keyMessage = "Key khaali hai"
-                                } else {
+                        keyMessage?.let {
+                            val color = when (keyMessageOk) {
+                                true -> Color(0xFF2E7D32)
+                                false -> Color.Red
+                                null -> Color.Gray
+                            }
+                            Text(it, color = color)
+                        }
+                        Button(
+                            onClick = {
+                                scope.launch {
+                                    val secret = keyText.trim()
+                                    if (secret.isEmpty()) {
+                                        keyMessage = "Key khaali hai"
+                                        keyMessageOk = false
+                                        return@launch
+                                    }
+                                    keyChecking = true
+                                    keyMessage = "Key check ho rahi hai…"
+                                    keyMessageOk = null
                                     try {
-                                        keyManager.addKey(
+                                        when (val check = keyManager.validateKey(
                                             LlmProvider.valueOf(providerName),
-                                            nickname.trim(),
                                             secret
-                                        )
-                                        nickname = ""
-                                        keyText = ""
-                                        keyMessage = "Key save ho gayi"
-                                    } catch (e: Exception) {
-                                        keyMessage = "Key save nahi hui"
+                                        )) {
+                                            is KeyCheck.Valid -> {
+                                                keyManager.addKey(
+                                                    LlmProvider.valueOf(providerName),
+                                                    nickname.trim(),
+                                                    secret,
+                                                    status = "VALID"
+                                                )
+                                                nickname = ""
+                                                keyText = ""
+                                                keyMessage = "✓ Key valid — save ho gayi"
+                                                keyMessageOk = true
+                                            }
+                                            is KeyCheck.Invalid -> {
+                                                keyMessage = "✗ ${check.reason}"
+                                                keyMessageOk = false
+                                            }
+                                            is KeyCheck.NetworkError -> {
+                                                keyMessage = "✗ ${check.reason}"
+                                                keyMessageOk = false
+                                            }
+                                        }
+                                    } catch (_: Exception) {
+                                        keyMessage = "✗ Check nahi ho saki — dobara try karo"
+                                        keyMessageOk = false
+                                    } finally {
+                                        keyChecking = false
                                     }
                                 }
-                            }
-                        }) {
-                            Text("Save Key")
+                            },
+                            enabled = !keyChecking
+                        ) {
+                            Text(if (keyChecking) "Check ho rahi…" else "Save Key")
                         }
                         HorizontalDivider()
                         if (keys.isEmpty()) {
@@ -233,7 +272,19 @@ class MainActivity : ComponentActivity() {
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    Text("${key.provider} - ${key.nickname}")
+                                    Column {
+                                        Text("${key.provider} - ${key.nickname}")
+                                        val (statusLabel, statusColor) = when (key.status) {
+                                            "VALID" -> "VALID" to Color(0xFF2E7D32)
+                                            "INVALID" -> "INVALID" to Color.Red
+                                            else -> "UNCHECKED" to Color.Gray
+                                        }
+                                        Text(
+                                            statusLabel,
+                                            color = statusColor,
+                                            style = MaterialTheme.typography.labelSmall
+                                        )
+                                    }
                                     TextButton(onClick = {
                                         scope.launch { keyManager.deleteKey(key.id) }
                                     }) {
