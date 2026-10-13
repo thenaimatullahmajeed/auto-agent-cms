@@ -121,7 +121,7 @@ class AgentService : Service() {
             groq = GroqClient(),
             geminiKeys = geminiPool,
             groqKeys = groqPool,
-            geminiModel = "gemini-2.0-flash",
+            geminiModel = "gemini-2.5-flash",
             groqTextModel = "llama-3.3-70b-versatile",
             onKeyUnauthorized = { keyId -> keyManager.markKeyInvalid(keyId) }
         )

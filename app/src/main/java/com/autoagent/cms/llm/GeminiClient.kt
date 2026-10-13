@@ -101,7 +101,7 @@ class GeminiClient(
             401, 403 -> LlmFailure.Unauthorized(safeMessage)
             429 -> LlmFailure.RateLimited(retryMillis, safeMessage)
             in 500..599 -> LlmFailure.Server(safeMessage)
-            else -> LlmFailure.InvalidResponse(safeMessage)
+            else -> LlmFailure.InvalidResponse(safeMessage, code)
         }
     }
 }

@@ -54,7 +54,7 @@ sealed class LlmFailure(message: String, cause: Throwable? = null) : Exception(m
     class Unauthorized(message: String) : LlmFailure(message)
     class Server(message: String, cause: Throwable? = null) : LlmFailure(message, cause)
     class Network(message: String, cause: Throwable? = null) : LlmFailure(message, cause)
-    class InvalidResponse(message: String) : LlmFailure(message)
+    class InvalidResponse(message: String, val httpCode: Int? = null) : LlmFailure(message)
     class NoAvailableKey(message: String) : LlmFailure(message)
     class Unsupported(message: String) : LlmFailure(message)
 }
@@ -72,6 +72,9 @@ fun LlmFailure.userMessage(): String = when (this) {
     is LlmFailure.RateLimited -> "Limit khatam ho gayi — thodi der baad dobara chalao."
     is LlmFailure.Network -> "Internet ka masla hai — connection check karo."
     is LlmFailure.Server -> "Server error — thodi der baad dobara try karo."
-    is LlmFailure.InvalidResponse -> "Server se ghalat jawab aaya — dobara try karo."
+    is LlmFailure.InvalidResponse ->
+        if (this.httpCode == 400 || this.httpCode == 404)
+            "Model ka naam ghalat hai ya band ho chuka hai (HTTP ${this.httpCode})."
+        else "Server se ghalat jawab aaya — dobara try karo."
     is LlmFailure.Unsupported -> "Ye request supported nahi hai."
 }
