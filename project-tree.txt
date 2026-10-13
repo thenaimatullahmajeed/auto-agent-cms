@@ -1,0 +1,37 @@
+AutoAgentCMS/
+├── settings.gradle.kts
+├── build.gradle.kts
+├── gradle.properties
+└── app/
+    ├── build.gradle.kts
+    └── src/main/
+        ├── AndroidManifest.xml
+        ├── res/
+        │   ├── values/strings.xml
+        │   └── xml/accessibility_service_config.xml
+        └── java/com/autoagent/cms/
+            ├── MainActivity.kt
+            ├── data/
+            │   ├── AgentDatabase.kt
+            │   ├── AgentRepository.kt
+            │   └── Entities.kt
+            ├── llm/
+            │   ├── LlmModels.kt
+            │   ├── LlmRouter.kt
+            │   ├── GeminiClient.kt
+            │   ├── GroqClient.kt
+            │   └── KeyPool.kt
+            ├── service/
+            │   ├── AgentService.kt
+            │   ├── AgentAccessibilityService.kt
+            │   └── AgentNotificationListener.kt
+            ├── automation/
+            │   ├── AgentLoop.kt
+            │   ├── UiExecutor.kt
+            │   ├── ScreenObserver.kt
+            │   ├── WhatsAppController.kt
+            │   └── RecipeStore.kt
+            ├── security/
+            │   └── SensitiveScreenGuard.kt
+            └── util/
+                └── AgentLogger.kt

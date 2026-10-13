@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Auto Agent CMS</string>
+    <string name="accessibility_description">Observe the active screen and perform user-authorized automation tasks.</string>
+    <string name="notification_listener_label">Auto Agent task notifications</string>
+</resources>
